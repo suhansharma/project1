@@ -1,0 +1,68 @@
+---
+- hosts: tomcat
+  remote_user: ec2-user
+  become: yes
+  tasks:
+  - name: Creates directory
+    file:
+      path: /home/ec2-user/gitrepo
+      state: directory
+  - name: checkout git repo
+    ansible.builtin.git:
+      repo: https://github.com/PRATYUSHNAIR1976/pechuwar.git
+      dest: /home/ec2-user/gitrepo/addressbook.war
+  - name: installing tomcat CentOS
+    package:
+      name: tomcat
+      state: present
+    when:  ansible_facts['os_family'] == "RedHat"
+  - name: installing tomcat Ubuntu
+    package:
+      name: tomcat9
+      state: present
+    when:  ansible_facts['os_family'] == "Debian"
+  - name: starting tomcat CentOS
+    service:
+      name: tomcat
+      state: started
+    when:  ansible_facts['os_family'] == "RedHat"
+  - name: starting tomcat Ubuntu
+    service:
+      name: tomcat9
+      state: started
+    when:  ansible_facts['os_family'] == "Debian"
+  - name: configuration of tomcat CentOS
+    copy:
+      src: /ec2-user/tomcat.config
+      dest: /etc/tomcat/tomcat-users.xml
+    when:  ansible_facts['os_family'] == "RedHat"
+  - name: starting up tomcat CentOS 
+    service:
+      name: tomcat
+      state: restarted
+    when:  ansible_facts['os_family'] == "RedHat"
+  - name: starting tomcat Ubuntu
+    service:
+      name: tomcat9
+      state: restarted
+    when:  ansible_facts['os_family'] == "Debian"
+  - name: copying addressbook file CentOS
+    copy:
+      src: /home/ec2-user/gitrepo/addressbook.war
+      dest: /usr/share/tomcat/webapps
+    when:  ansible_facts['os_family'] == "RedHat"
+  - name: copying addressbook file Ubuntu
+    copy:
+      src: /home/ec2-user/gitrepo/addressbook.war
+      dest: /var/lib/tomcat9/webapps
+    when:  ansible_facts['os_family'] == "Debian"
+  - name: starting up tomcat CentOS 
+    service:
+      name: tomcat
+      state: restarted
+    when:  ansible_facts['os_family'] == "RedHat"
+  - name: starting tomcat Ubuntu
+    service:
+      name: tomcat9
+      state: restarted
+    when:  ansible_facts['os_family'] == "Debian"
